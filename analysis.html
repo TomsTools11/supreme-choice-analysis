@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supreme Choice Insurance — Campaign Performance Analysis</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --goal-blue: #0479DF;
+    --goal-blue-light: #E8F4FD;
+    --goal-blue-dark: #035FAF;
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --amber: #D97706;
+    --amber-bg: #FFFBEB;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+    --radius: 8px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    line-height: 1.6;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .report-container { max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
+  .report-header {
+    background: linear-gradient(135deg, var(--goal-blue) 0%, var(--goal-blue-dark) 100%);
+    color: white; border-radius: var(--radius); padding: 40px 36px; margin-bottom: 32px; box-shadow: var(--shadow-md);
+  }
+  .report-header .logo-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    font-size: 13px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.85;
+  }
+  .report-header .logo-dot { width: 10px; height: 10px; background: white; border-radius: 50%; display: inline-block; }
+  .report-header h1 { font-size: 28px; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
+  .report-header .subtitle { font-size: 15px; opacity: 0.8; font-weight: 400; }
+  .report-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .report-meta .meta-item { font-size: 13px; opacity: 0.75; }
+  .report-meta .meta-item strong { opacity: 1; font-weight: 600; }
+  .section { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+  .section-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 10px; }
+  .section-number { background: var(--goal-blue); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+  .section-body { padding: 20px 24px 24px; }
+  .exec-summary { font-size: 15px; line-height: 1.75; color: var(--gray-700); }
+  .root-cause-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 12px; }
+  .root-cause-badge.competitive { background: var(--red-bg); color: var(--red); }
+  .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table thead th { background: var(--gray-50); color: var(--gray-600); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--gray-200); white-space: nowrap; }
+  table.data-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  table.data-table tbody tr:last-child td { border-bottom: none; }
+  table.data-table tbody tr:hover { background: var(--gray-50); }
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+  .font-mono { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 12px; }
+  .trend-up { color: var(--green); }
+  .trend-down { color: var(--red); }
+  .trend-flat { color: var(--gray-400); }
+  .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .status-badge.action { background: var(--red-bg); color: var(--red); }
+  .status-badge.investigate { background: var(--amber-bg); color: var(--amber); }
+  .status-badge.performing { background: var(--green-bg); color: var(--green); }
+  .status-badge.hold { background: var(--gray-100); color: var(--gray-500); }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .metric-card { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; }
+  .metric-card .metric-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 4px; }
+  .metric-card .metric-value { font-size: 24px; font-weight: 700; color: var(--gray-900); }
+  .metric-card .metric-change { font-size: 12px; font-weight: 600; margin-top: 4px; }
+  .metric-card.highlight { border-color: var(--goal-blue); background: var(--goal-blue-light); }
+  .metric-card.highlight .metric-label { color: var(--goal-blue-dark); }
+  .metric-card.alert { border-color: var(--red); background: var(--red-bg); }
+  .metric-card.alert .metric-label { color: var(--red); }
+  .rec-list { display: flex; flex-direction: column; gap: 12px; }
+  .rec-card { border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 20px; border-left: 4px solid var(--gray-300); }
+  .rec-card.raise { border-left-color: var(--goal-blue); }
+  .rec-card.reduce { border-left-color: var(--green); }
+  .rec-card.investigate { border-left-color: var(--amber); }
+  .rec-card.hold { border-left-color: var(--gray-300); }
+  .rec-card .rec-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .rec-card .rec-source { font-weight: 700; font-size: 15px; color: var(--gray-900); }
+  .rec-card .rec-detail { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+  .rec-card .rec-multiplier { display: inline-flex; align-items: center; gap: 6px; background: var(--goal-blue-light); color: var(--goal-blue-dark); padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; margin-top: 8px; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+  .rec-card .rec-multiplier .arrow { font-size: 16px; }
+  .callout { border-radius: var(--radius); padding: 14px 18px; font-size: 13px; line-height: 1.6; margin-bottom: 16px; display: flex; gap: 10px; }
+  .callout.info { background: var(--goal-blue-light); color: var(--goal-blue-dark); border: 1px solid rgba(4, 121, 223, 0.2); }
+  .callout.warning { background: var(--amber-bg); color: #92400E; border: 1px solid rgba(217, 119, 6, 0.2); }
+  .callout.critical { background: var(--red-bg); color: #991B1B; border: 1px solid rgba(220, 38, 38, 0.2); }
+  .callout-icon { flex-shrink: 0; font-size: 16px; }
+  .methodology-text { font-size: 13px; color: var(--gray-500); line-height: 1.75; }
+  .methodology-text strong { color: var(--gray-600); }
+  .report-footer { text-align: center; padding: 24px; color: var(--gray-400); font-size: 12px; border-top: 1px solid var(--gray-200); margin-top: 16px; }
+  .report-footer a { color: var(--goal-blue); text-decoration: none; }
+  .highlight-row { background: #FEF2F2 !important; }
+  .baseline-row { background: var(--goal-blue-light) !important; font-weight: 600; }
+  .key-finding { background: var(--red-bg); border: 1px solid rgba(220,38,38,0.15); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; }
+  .key-finding h4 { color: var(--red); font-size: 14px; margin-bottom: 6px; }
+  .key-finding p { font-size: 13px; color: #991B1B; line-height: 1.6; }
+  .impact-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+  .impact-high { background: var(--red-bg); color: var(--red); }
+  .impact-medium { background: var(--amber-bg); color: var(--amber); }
+  .impact-low { background: var(--gray-100); color: var(--gray-500); }
+  @media print {
+    body { background: white; font-size: 12px; }
+    .report-container { padding: 0; max-width: 100%; }
+    .report-header { break-after: avoid; }
+    .section { box-shadow: none; border: 1px solid var(--gray-200); break-inside: avoid; }
+    .metric-grid { grid-template-columns: repeat(4, 1fr); }
+    @page { margin: 0.75in; }
+  }
+  @media (max-width: 640px) {
+    .report-header { padding: 28px 20px; }
+    .report-header h1 { font-size: 22px; }
+    .section-body { padding: 16px; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .report-meta { gap: 12px; }
+    .rec-card .rec-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="report-container">
+
+  <header class="report-header">
+    <div class="logo-row">
+      <span class="logo-dot"></span>
+      GOAL Platform — Campaign Analysis
+    </div>
+    <h1>Supreme Choice Insurance Performance Report</h1>
+    <p class="subtitle">Week of Feb 10–13, 2026 · Homeowners · California</p>
+    <div class="report-meta">
+      <div class="meta-item">Prepared <strong>February 13, 2026</strong></div>
+      <div class="meta-item">Account Manager <strong>Tom Panos</strong></div>
+      <div class="meta-item">Campaign <strong>Home - CA</strong></div>
+      <div class="meta-item">RightPricing <strong>7-Day CA Home (Calibrated)</strong></div>
+    </div>
+  </header>
+
+  <!-- 1. EXECUTIVE SUMMARY -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">1</span>
+      <span class="section-title">Executive Summary</span>
+    </div>
+    <div class="section-body">
+      <div class="key-finding">
+        <h4>&#x1F6A8; Client Reported: Zero Leads Today Despite Active Campaign</h4>
+        <p>"Homeowner leads have been active all day, yet ZERO leads have come in. It is very uncommon. Will you please give it a look?"</p>
+      </div>
+      <p class="exec-summary">
+        Supreme Choice Insurance's Home - CA campaign is experiencing a <strong>severe win rate collapse</strong> that makes zero-lead days not just possible, but mathematically expected. This week's win rate has cratered to <strong>0.63%</strong> — down 72% from last week (2.24%) and 55% from last month (1.41%). Meanwhile, market searches <em>increased</em> from 1,870 last week to 3,598 this week, confirming the problem is not demand — it's competitive positioning.
+      </p>
+      <p class="exec-summary" style="margin-top: 12px;">
+        <strong>RightPricing data confirms the severity:</strong> The three highest-volume sources (Tier 1, Tier 3, Tier 2) all have sub-100% multipliers, producing effective bids that fall <strong>below the 3rd position RPC</strong> on every one of them. On Tier 1 — which represents 72% of all auction opportunities — the effective bid of $1.97 is 58% below the 1st position RPC of $4.68 and 28% below even the 3rd position RPC of $2.73. The client is literally bidding below the bottom of the ad wall on their largest inventory sources.
+      </p>
+      <div>
+        <span class="root-cause-badge competitive">Root Cause: Competitive Positioning — Severely Underbidding vs. Market RPCs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. KEY METRICS SNAPSHOT -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">2</span>
+      <span class="section-title">Key Metrics Snapshot — This Week vs. Last Week</span>
+    </div>
+    <div class="section-body">
+      <div class="metric-grid">
+        <div class="metric-card alert">
+          <div class="metric-label">Win Rate</div>
+          <div class="metric-value">0.63%</div>
+          <div class="metric-change trend-down">&#9660; 72% from last week (2.24%)</div>
+        </div>
+        <div class="metric-card alert">
+          <div class="metric-label">Impression Share</div>
+          <div class="metric-value">0.92%</div>
+          <div class="metric-change trend-down">&#9660; 65% from last week (2.62%)</div>
+        </div>
+        <div class="metric-card alert">
+          <div class="metric-label">Avg Position</div>
+          <div class="metric-value">9.05</div>
+          <div class="metric-change trend-down">&#9660; From 6.36 last week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Leads (This Week)</div>
+          <div class="metric-value">20</div>
+          <div class="metric-change trend-down">&#9660; 47% from last week (38)</div>
+        </div>
+        <div class="metric-card highlight">
+          <div class="metric-label">Searches (Market)</div>
+          <div class="metric-value">3,598</div>
+          <div class="metric-change trend-up">&#9650; 92% from last week (1,870)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Base Bid</div>
+          <div class="metric-value">$2.26</div>
+          <div class="metric-change trend-flat">&#8212; Ad Group: California (CA)</div>
+        </div>
+      </div>
+
+      <div class="callout critical">
+        <span class="callout-icon">&#x26A0;&#xFE0F;</span>
+        <span><strong>Critical:</strong> Market demand nearly doubled this week (3,598 vs 1,870 searches) while impressions dropped by 33% (33 vs 49). The client is seeing <em>more</em> auction opportunities but winning <em>far fewer</em> of them. RightPricing confirms: their effective bids sit below 3rd position RPC on every major source.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CAMPAIGN TREND DASHBOARD -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">3</span>
+      <span class="section-title">Campaign Trend Dashboard</span>
+    </div>
+    <div class="section-body">
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th class="text-right">Searches</th>
+              <th class="text-right">Impressions</th>
+              <th class="text-right">Imp %</th>
+              <th class="text-right">Clicks</th>
+              <th class="text-right">Leads</th>
+              <th class="text-right">Cost</th>
+              <th class="text-right">Avg CPC</th>
+              <th class="text-right">Avg Bid</th>
+              <th class="text-right">Avg Pos</th>
+              <th class="text-right">Win Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Last Month</strong></td>
+              <td class="text-right font-mono">8,578</td>
+              <td class="text-right font-mono">390</td>
+              <td class="text-right font-mono">4.55%</td>
+              <td class="text-right font-mono">121</td>
+              <td class="text-right font-mono">87</td>
+              <td class="text-right font-mono">$259.45</td>
+              <td class="text-right font-mono">$2.14</td>
+              <td class="text-right font-mono">$1.55</td>
+              <td class="text-right font-mono">4.86</td>
+              <td class="text-right font-mono">1.41%</td>
+            </tr>
+            <tr>
+              <td><strong>This Month</strong></td>
+              <td class="text-right font-mono">5,468</td>
+              <td class="text-right font-mono">82</td>
+              <td class="text-right font-mono">1.50%</td>
+              <td class="text-right font-mono">65</td>
+              <td class="text-right font-mono">58</td>
+              <td class="text-right font-mono">$141.94</td>
+              <td class="text-right font-mono">$2.18</td>
+              <td class="text-right font-mono">$1.76</td>
+              <td class="text-right font-mono">8.13</td>
+              <td class="text-right font-mono trend-down">1.18%</td>
+            </tr>
+            <tr>
+              <td><strong>Last Week</strong></td>
+              <td class="text-right font-mono">1,870</td>
+              <td class="text-right font-mono">49</td>
+              <td class="text-right font-mono">2.62%</td>
+              <td class="text-right font-mono">42</td>
+              <td class="text-right font-mono">38</td>
+              <td class="text-right font-mono">$81.44</td>
+              <td class="text-right font-mono">$1.93</td>
+              <td class="text-right font-mono">$1.77</td>
+              <td class="text-right font-mono">6.36</td>
+              <td class="text-right font-mono">2.24%</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>This Week &#x26A0;&#xFE0F;</strong></td>
+              <td class="text-right font-mono">3,598</td>
+              <td class="text-right font-mono">33</td>
+              <td class="text-right font-mono trend-down"><strong>0.92%</strong></td>
+              <td class="text-right font-mono">23</td>
+              <td class="text-right font-mono">20</td>
+              <td class="text-right font-mono">$60.50</td>
+              <td class="text-right font-mono">$2.63</td>
+              <td class="text-right font-mono">$1.76</td>
+              <td class="text-right font-mono trend-down"><strong>9.05</strong></td>
+              <td class="text-right font-mono trend-down"><strong>0.63%</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 16px; padding: 14px 18px; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200);">
+        <p style="font-size: 13px; color: var(--gray-600); line-height: 1.6;">
+          <strong>Trend Interpretation:</strong> The week-over-week trajectory is alarming. Despite searches nearly doubling (market demand is UP), impression share plummeted from 2.62% &rarr; 0.92%, win rate fell from 2.24% &rarr; 0.63%, and average position worsened from 6.36 &rarr; 9.05. This confirms competitors have increased their bids while Supreme Choice's bids remained flat, pushing the account to the bottom of the ad wall where zero-lead days become the norm rather than the exception.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. SOURCE PERFORMANCE MATRIX -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">4</span>
+      <span class="section-title">Source Performance Matrix — This Week</span>
+    </div>
+    <div class="section-body">
+      <div class="callout info" style="margin-bottom: 16px;">
+        <span class="callout-icon">&#x2139;&#xFE0F;</span>
+        <span>Showing active sources with Opportunities > 0 this week, ranked by opportunity volume. Effective bids calculated using the $2.26 ad group base bid.</span>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th class="text-right">Opps</th>
+              <th class="text-right">Bid Rate</th>
+              <th class="text-right">Win Rate</th>
+              <th class="text-right">Leads</th>
+              <th class="text-right">Mult</th>
+              <th class="text-right">Eff. Bid</th>
+              <th class="text-right">1st RPC</th>
+              <th class="text-right">3rd RPC</th>
+              <th class="text-center">Classification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td><strong>Tier 1</strong></td>
+              <td class="text-right font-mono"><strong>9,626</strong></td>
+              <td class="text-right font-mono">32.29%</td>
+              <td class="text-right font-mono trend-down"><strong>0.42%</strong></td>
+              <td class="text-right font-mono">12</td>
+              <td class="text-right font-mono trend-down"><strong>87%</strong></td>
+              <td class="text-right font-mono">$1.97</td>
+              <td class="text-right font-mono">$4.68</td>
+              <td class="text-right font-mono">$2.73</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd RPC</span></td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Tier 3</strong></td>
+              <td class="text-right font-mono">1,797</td>
+              <td class="text-right font-mono trend-down">7.45%</td>
+              <td class="text-right font-mono trend-down">0%</td>
+              <td class="text-right font-mono">0</td>
+              <td class="text-right font-mono trend-down"><strong>69%</strong></td>
+              <td class="text-right font-mono">$1.56</td>
+              <td class="text-right font-mono">$8.70</td>
+              <td class="text-right font-mono">$3.06</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd RPC</span></td>
+            </tr>
+            <tr>
+              <td>Home Search</td>
+              <td class="text-right font-mono">910</td>
+              <td class="text-right font-mono">12.85%</td>
+              <td class="text-right font-mono">3.42%</td>
+              <td class="text-right font-mono">3</td>
+              <td class="text-right font-mono">198%</td>
+              <td class="text-right font-mono">$4.47</td>
+              <td class="text-right font-mono">$23.54</td>
+              <td class="text-right font-mono">$1.06</td>
+              <td class="text-center"><span class="status-badge performing">2nd–1st RPC</span></td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Tier 2</strong></td>
+              <td class="text-right font-mono">508</td>
+              <td class="text-right font-mono">16.33%</td>
+              <td class="text-right font-mono trend-down">2.41%</td>
+              <td class="text-right font-mono">2</td>
+              <td class="text-right font-mono trend-down"><strong>81%</strong></td>
+              <td class="text-right font-mono">$1.83</td>
+              <td class="text-right font-mono">$3.72</td>
+              <td class="text-right font-mono">$2.60</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd RPC</span></td>
+            </tr>
+            <tr>
+              <td>Home SearchB</td>
+              <td class="text-right font-mono">240</td>
+              <td class="text-right font-mono trend-up">40%</td>
+              <td class="text-right font-mono">3.13%</td>
+              <td class="text-right font-mono">3</td>
+              <td class="text-right font-mono">110%</td>
+              <td class="text-right font-mono">$2.49</td>
+              <td class="text-right font-mono">$9.65</td>
+              <td class="text-right font-mono">$1.41</td>
+              <td class="text-center"><span class="status-badge investigate">2nd–3rd RPC</span></td>
+            </tr>
+            <tr>
+              <td>Premium Referral</td>
+              <td class="text-right font-mono">131</td>
+              <td class="text-right font-mono trend-down">6.1%</td>
+              <td class="text-right font-mono">12.5%</td>
+              <td class="text-right font-mono">0</td>
+              <td class="text-right font-mono">90%</td>
+              <td class="text-right font-mono">$2.03</td>
+              <td class="text-right font-mono">$4.43</td>
+              <td class="text-right font-mono">$3.36</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd RPC</span></td>
+            </tr>
+            <tr>
+              <td>NA</td>
+              <td class="text-right font-mono">29</td>
+              <td class="text-right font-mono">10.34%</td>
+              <td class="text-right font-mono">0%</td>
+              <td class="text-right font-mono">0</td>
+              <td class="text-right font-mono">136%</td>
+              <td class="text-right font-mono">$3.07</td>
+              <td class="text-right font-mono">—</td>
+              <td class="text-right font-mono">—</td>
+              <td class="text-center"><span class="status-badge hold">Low Volume</span></td>
+            </tr>
+            <tr>
+              <td>Premium Email C</td>
+              <td class="text-right font-mono">11</td>
+              <td class="text-right font-mono">9.09%</td>
+              <td class="text-right font-mono">0%</td>
+              <td class="text-right font-mono">0</td>
+              <td class="text-right font-mono">100%</td>
+              <td class="text-right font-mono">$2.26</td>
+              <td class="text-right font-mono">—</td>
+              <td class="text-right font-mono">—</td>
+              <td class="text-center"><span class="status-badge hold">Low Volume</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="key-finding" style="margin-top: 16px;">
+        <h4>&#x1F4A1; RightPricing Confirms: Bidding Below the Ad Wall on 83% of Inventory</h4>
+        <p>
+          Tier 1 ($1.97 eff bid vs $2.73 third-position RPC), Tier 3 ($1.56 vs $3.06), and Tier 2 ($1.83 vs $2.60) are all bidding <strong>below the 3rd position RPC</strong> — meaning the client isn't just at the bottom of the ad wall, they're <em>below</em> it. On Tier 1 alone (72% of all opportunities), the effective bid would need to increase by <strong>138%</strong> to reach the 1st position RPC of $4.68. Even reaching 3rd position requires a 39% bid increase.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MARKET POSITION MAP (RightPricing Calibrated) -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">5</span>
+      <span class="section-title">Market Position Map — RightPricing Calibrated</span>
+    </div>
+    <div class="section-body">
+      <div class="callout info">
+        <span class="callout-icon">&#x2705;</span>
+        <span><strong>Calibrated with 7-day RightPricing data for Home — CA.</strong> Each bar shows the source's market RPC positions (1st, 2nd, 3rd) and the client's current effective bid. The gap between the client's bid and the position RPCs reveals exactly how far off-market they are.</span>
+      </div>
+
+      <div class="data-table-wrapper" style="margin-top: 16px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th class="text-right">Eff. Bid</th>
+              <th class="text-right">3rd RPC</th>
+              <th class="text-right">2nd RPC</th>
+              <th class="text-right">1st RPC</th>
+              <th class="text-center">Position</th>
+              <th class="text-right">Gap to 1st</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td><strong>Tier 1</strong></td>
+              <td class="text-right font-mono"><strong>$1.97</strong></td>
+              <td class="text-right font-mono">$2.73</td>
+              <td class="text-right font-mono">$3.17</td>
+              <td class="text-right font-mono">$4.68</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd</span></td>
+              <td class="text-right font-mono trend-down"><strong>-58%</strong></td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Tier 3</strong></td>
+              <td class="text-right font-mono"><strong>$1.56</strong></td>
+              <td class="text-right font-mono">$3.06</td>
+              <td class="text-right font-mono">$3.55</td>
+              <td class="text-right font-mono">$8.70</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd</span></td>
+              <td class="text-right font-mono trend-down"><strong>-82%</strong></td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Tier 2</strong></td>
+              <td class="text-right font-mono"><strong>$1.83</strong></td>
+              <td class="text-right font-mono">$2.60</td>
+              <td class="text-right font-mono">$3.35</td>
+              <td class="text-right font-mono">$3.72</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd</span></td>
+              <td class="text-right font-mono trend-down"><strong>-51%</strong></td>
+            </tr>
+            <tr>
+              <td>Home SearchB</td>
+              <td class="text-right font-mono">$2.49</td>
+              <td class="text-right font-mono">$1.41</td>
+              <td class="text-right font-mono">$4.26</td>
+              <td class="text-right font-mono">$9.65</td>
+              <td class="text-center"><span class="status-badge investigate">2nd–3rd</span></td>
+              <td class="text-right font-mono trend-down">-74%</td>
+            </tr>
+            <tr>
+              <td>Home Search</td>
+              <td class="text-right font-mono">$4.47</td>
+              <td class="text-right font-mono">$1.06</td>
+              <td class="text-right font-mono">$6.04</td>
+              <td class="text-right font-mono">$23.54</td>
+              <td class="text-center"><span class="status-badge performing">2nd–1st</span></td>
+              <td class="text-right font-mono trend-down">-81%</td>
+            </tr>
+            <tr>
+              <td>Premium Referral</td>
+              <td class="text-right font-mono">$2.03</td>
+              <td class="text-right font-mono">$3.36</td>
+              <td class="text-right font-mono">$3.56</td>
+              <td class="text-right font-mono">$4.43</td>
+              <td class="text-center"><span class="status-badge action">Below 3rd</span></td>
+              <td class="text-right font-mono trend-down">-54%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 20px; padding: 14px 18px; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200);">
+        <p style="font-size: 13px; color: var(--gray-600); line-height: 1.6;">
+          <strong>Interpretation:</strong> Only <strong>Home Search</strong> (198% multiplier, $4.47 eff bid) is positioned competitively, sitting between the 2nd ($6.04) and 1st ($23.54) position RPCs. However, its low 12.85% bid rate indicates a <em>targeting/filter issue</em>, not a bid problem. Every other major source is positioned below the 3rd position RPC — the absolute floor of the ad wall — which explains the campaign-wide win rate collapse and the zero-lead days.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. RECOMMENDATIONS (RightPricing Calibrated) -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">6</span>
+      <span class="section-title">Recommendations — RightPricing Calibrated</span>
+    </div>
+    <div class="section-body">
+      <div class="callout info" style="margin-bottom: 16px;">
+        <span class="callout-icon">&#x1F3AF;</span>
+        <span><strong>Target multipliers calculated using:</strong> Target Multiplier = (Target RPC / $2.26 Base Bid) × 100. Targets include a 5–10% buffer for bid volatility per the rounding rule. All recommendations target at least 2nd position to meaningfully increase win rate while managing spend.</span>
+      </div>
+
+      <div class="rec-list">
+
+        <!-- PRIORITY 1: Tier 1 -->
+        <div class="rec-card raise">
+          <div class="rec-header">
+            <span class="rec-source">Tier 1 — PRIORITY #1</span>
+            <span class="status-badge action">Raise Multiplier</span>
+          </div>
+          <p class="rec-detail">
+            <strong>72% of all auction opportunities</strong> (9,626 this week) with a catastrophic 0.42% win rate. RightPricing shows 1st position at $4.68, 2nd at $3.17, and 3rd at $2.73. The current effective bid of $1.97 is <strong>below even the 3rd position</strong> — the client isn't just low, they're off the ad wall entirely on their largest source. Target: 2nd position at $3.17, which requires a 145% multiplier ($3.28 eff bid). Recommend <strong>150%</strong> with the rounding buffer. For 1st position ($4.68), the multiplier would need to be 215%.
+          </p>
+          <div class="rec-multiplier">
+            87% <span class="arrow">&rarr;</span> 150%
+            <span style="font-weight: 400; color: var(--gray-500); margin-left: 8px;">($1.97 → $3.39) · Target: 2nd Position ($3.17 RPC)</span>
+          </div>
+          <span class="impact-label impact-high">Highest Impact — 9,626 Opportunities</span>
+        </div>
+
+        <!-- PRIORITY 2: Tier 3 -->
+        <div class="rec-card raise">
+          <div class="rec-header">
+            <span class="rec-source">Tier 3 — PRIORITY #2</span>
+            <span class="status-badge action">Raise Multiplier</span>
+          </div>
+          <p class="rec-detail">
+            1,797 opportunities with a 69% multiplier creating an effective bid of just $1.56 — the lowest of any active source. RightPricing shows this is a premium source with 1st RPC at $8.70, 2nd at $3.55, 3rd at $3.06. The current bid is <strong>49% below the 3rd position</strong>. 1st position is extremely expensive at 385% multiplier. Target: 3rd position at $3.06, requiring a 140% multiplier ($3.16 eff bid). Recommend <strong>145%</strong> with buffer. The low bid rate (7.45%) may also indicate targeting filter constraints worth investigating alongside the multiplier raise.
+          </p>
+          <div class="rec-multiplier">
+            69% <span class="arrow">&rarr;</span> 145%
+            <span style="font-weight: 400; color: var(--gray-500); margin-left: 8px;">($1.56 → $3.28) · Target: 3rd Position ($3.06 RPC)</span>
+          </div>
+          <span class="impact-label impact-high">High Impact — 1,797 Opportunities</span>
+        </div>
+
+        <!-- PRIORITY 3: Tier 2 -->
+        <div class="rec-card raise">
+          <div class="rec-header">
+            <span class="rec-source">Tier 2 — PRIORITY #3</span>
+            <span class="status-badge action">Raise Multiplier</span>
+          </div>
+          <p class="rec-detail">
+            508 opportunities with an 81% multiplier ($1.83 eff bid). RightPricing: 1st at $3.72, 2nd at $3.35, 3rd at $2.60. Current bid is 30% below 3rd position. This source delivered 37 leads last month with a 17.3% win rate — the competitive shift is dramatic. Target: 1st position at $3.72, which requires a 170% multiplier ($3.84 eff bid). Recommend <strong>175%</strong> with buffer. Given the relatively narrow spread between positions ($2.60–$3.72), targeting 1st is cost-efficient here.
+          </p>
+          <div class="rec-multiplier">
+            81% <span class="arrow">&rarr;</span> 175%
+            <span style="font-weight: 400; color: var(--gray-500); margin-left: 8px;">($1.83 → $3.96) · Target: 1st Position ($3.72 RPC)</span>
+          </div>
+          <span class="impact-label impact-medium">Medium Impact — 508 Opportunities</span>
+        </div>
+
+        <!-- Home SearchB -->
+        <div class="rec-card raise">
+          <div class="rec-header">
+            <span class="rec-source">Home SearchB — PRIORITY #4</span>
+            <span class="status-badge action">Raise Multiplier</span>
+          </div>
+          <p class="rec-detail">
+            Best relative performer with 40% bid rate and 3 leads this week from just 240 opportunities. RightPricing: 1st at $9.65, 2nd at $4.26, 3rd at $1.41. Current eff bid of $2.49 sits between 2nd and 3rd. Target: 2nd position at $4.26, requiring 195% multiplier ($4.41 eff bid). Recommend <strong>195%</strong>. This source has the best bid rate and conversion efficiency — higher positioning should improve an already strong win funnel.
+          </p>
+          <div class="rec-multiplier">
+            110% <span class="arrow">&rarr;</span> 195%
+            <span style="font-weight: 400; color: var(--gray-500); margin-left: 8px;">($2.49 → $4.41) · Target: 2nd Position ($4.26 RPC)</span>
+          </div>
+          <span class="impact-label impact-medium">Medium Impact — 240 Opportunities</span>
+        </div>
+
+        <!-- Premium Referral -->
+        <div class="rec-card raise">
+          <div class="rec-header">
+            <span class="rec-source">Premium Referral — PRIORITY #5</span>
+            <span class="status-badge action">Raise Multiplier</span>
+          </div>
+          <p class="rec-detail">
+            131 opportunities with a 6.1% bid rate and 90% multiplier ($2.03 eff bid). RightPricing: 1st at $4.43, 2nd at $3.56, 3rd at $3.36. Tight spread between positions — being competitive here requires getting above $3.36 at minimum. Target: 3rd position with buffer at 155% ($3.50 eff bid). Recommend <strong>155%</strong>. Note: the low bid rate (6.1%) suggests targeting filters may also be restricting auction entry on this source.
+          </p>
+          <div class="rec-multiplier">
+            90% <span class="arrow">&rarr;</span> 155%
+            <span style="font-weight: 400; color: var(--gray-500); margin-left: 8px;">($2.03 → $3.50) · Target: 3rd Position ($3.36 RPC)</span>
+          </div>
+          <span class="impact-label impact-low">Lower Impact — 131 Opportunities</span>
+        </div>
+
+        <!-- Home Search - INVESTIGATE (bid is fine) -->
+        <div class="rec-card investigate">
+          <div class="rec-header">
+            <span class="rec-source">Home Search — No Multiplier Change</span>
+            <span class="status-badge investigate">Investigate Bid Rate</span>
+          </div>
+          <p class="rec-detail">
+            RightPricing <strong>confirms the bid is competitive</strong>: at $4.47 effective bid, this source sits between 2nd ($6.04) and 1st ($23.54) position — well above the 3rd RPC of $1.06. The problem is NOT the multiplier. With only 12.85% bid rate on 910 opportunities, something is restricting auction entry — likely a targeting filter or ad group setting. <strong>Do not raise the multiplier.</strong> Investigate filters, geo targeting, and schedule settings on this source. The bid rate should be 30–40%+ for a source at this bid level.
+          </p>
+        </div>
+
+        <!-- Duplicate Sources -->
+        <div class="rec-card investigate">
+          <div class="rec-header">
+            <span class="rec-source">Duplicate Source Entries</span>
+            <span class="status-badge investigate">Configuration Cleanup</span>
+          </div>
+          <p class="rec-detail">
+            The source settings export shows multiple duplicate entries for the same source names (e.g., multiple "Home Search", "Tier 3", "Internal SEO" entries at 100% multiplier with zero opportunities). This is likely the known GOAL UI bug that duplicates source rows. Verify these aren't separate ad group entries causing cannibalization, and clean up if they are actual duplicates to reduce confusion.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Summary table -->
+      <div style="margin-top: 24px; padding: 18px; background: var(--goal-blue-light); border-radius: var(--radius); border: 1px solid rgba(4, 121, 223, 0.15);">
+        <p style="font-size: 14px; font-weight: 700; color: var(--goal-blue-dark); margin-bottom: 12px;">Multiplier Change Summary</p>
+        <table class="data-table" style="font-size: 13px;">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th class="text-right">Current</th>
+              <th class="text-right">Recommended</th>
+              <th class="text-right">Eff. Bid Now</th>
+              <th class="text-right">Eff. Bid New</th>
+              <th class="text-right">Target Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tier 1</strong></td>
+              <td class="text-right font-mono">87%</td>
+              <td class="text-right font-mono" style="color:var(--goal-blue); font-weight:700;">150%</td>
+              <td class="text-right font-mono">$1.97</td>
+              <td class="text-right font-mono">$3.39</td>
+              <td class="text-right">2nd ($3.17)</td>
+            </tr>
+            <tr>
+              <td><strong>Tier 3</strong></td>
+              <td class="text-right font-mono">69%</td>
+              <td class="text-right font-mono" style="color:var(--goal-blue); font-weight:700;">145%</td>
+              <td class="text-right font-mono">$1.56</td>
+              <td class="text-right font-mono">$3.28</td>
+              <td class="text-right">3rd ($3.06)</td>
+            </tr>
+            <tr>
+              <td><strong>Tier 2</strong></td>
+              <td class="text-right font-mono">81%</td>
+              <td class="text-right font-mono" style="color:var(--goal-blue); font-weight:700;">175%</td>
+              <td class="text-right font-mono">$1.83</td>
+              <td class="text-right font-mono">$3.96</td>
+              <td class="text-right">1st ($3.72)</td>
+            </tr>
+            <tr>
+              <td><strong>Home SearchB</strong></td>
+              <td class="text-right font-mono">110%</td>
+              <td class="text-right font-mono" style="color:var(--goal-blue); font-weight:700;">195%</td>
+              <td class="text-right font-mono">$2.49</td>
+              <td class="text-right font-mono">$4.41</td>
+              <td class="text-right">2nd ($4.26)</td>
+            </tr>
+            <tr>
+              <td><strong>Premium Referral</strong></td>
+              <td class="text-right font-mono">90%</td>
+              <td class="text-right font-mono" style="color:var(--goal-blue); font-weight:700;">155%</td>
+              <td class="text-right font-mono">$2.03</td>
+              <td class="text-right font-mono">$3.50</td>
+              <td class="text-right">3rd ($3.36)</td>
+            </tr>
+            <tr style="background: var(--green-bg);">
+              <td><strong>Home Search</strong></td>
+              <td class="text-right font-mono">198%</td>
+              <td class="text-right font-mono" style="color:var(--green); font-weight:700;">198% (Hold)</td>
+              <td class="text-right font-mono">$4.47</td>
+              <td class="text-right font-mono">$4.47</td>
+              <td class="text-right">2nd–1st &#x2705;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning" style="margin-top: 16px;">
+        <span class="callout-icon">&#x1F4B0;</span>
+        <span><strong>Spend Impact:</strong> These multiplier increases will raise average CPCs significantly. Ensure the client's daily budget can support higher bid levels. If budget is a constraint, prioritize Tier 1 (150%) first as it represents 72% of all opportunities, then layer in the other changes over 2–3 days to monitor spend trajectory.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. METHODOLOGY -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-number">7</span>
+      <span class="section-title">Methodology</span>
+    </div>
+    <div class="section-body">
+      <p class="methodology-text">
+        This analysis follows the GOAL Platform four-layer diagnostic framework.
+        <strong>Layer 1</strong> parsed the client's stated problem — zero leads on an active day — and identified it as an urgent volume issue requiring investigation.
+        <strong>Layer 2</strong> built a comparative trend table across four time periods (last month, this month, last week, this week). The diagnostic matrix (stable/up searches + declining win rate + declining impression share) confirmed Competitive Positioning as the primary root cause.
+        <strong>Layer 3</strong> drilled into source-level data, filtering to active sources with opportunities, calculating effective bids using the $2.26 ad group base bid, and classifying each source's problem type.
+        <strong>Layer 4</strong> calibrated all recommendations against the trailing 7-day RightPricing report for Home — CA. Target multipliers were calculated using the formula: Target Multiplier = (Target RPC / Base Bid) × 100, with a 5–10% buffer applied per the rounding rule to account for bid volatility. Position targets were set at 2nd or 3rd position based on volume impact potential and cost efficiency, with 1st position recommended only where the position spread is narrow (Tier 2).
+      </p>
+    </div>
+  </div>
+
+  <div class="report-footer">
+    GOAL Platform · Campaign Performance Analysis · Confidential<br>
+    Generated February 13, 2026 · <a href="https://goalplatform.com" target="_blank">goalplatform.com</a>
+  </div>
+
+</div>
+</body>
+</html>
